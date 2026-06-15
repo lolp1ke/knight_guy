@@ -7,7 +7,7 @@ mvn javafx:run
 # Tools
 install maven (mvn)
 ```sh
-# for macs assuming homebrew is installed
+# for macos assuming homebrew is installed
 brew install maven
 ```
 download [here](https://maven.apache.org/download.cgi)

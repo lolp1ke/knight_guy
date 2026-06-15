@@ -87,7 +87,7 @@ public class Main extends Application implements Consts {
         floor_img = rect((int) SCREEN_WIDTH, (int) FLOOR_HEIGHT, Color.GREEN);
       }
 
-      Image player_img = AssetStore.load("1player.png", PLAYER_W, PLAYER_H);
+      Image player_img = AssetStore.load("player.png", PLAYER_W, PLAYER_H);
       if (player_img == null) {
         player_img = rect((int) PLAYER_W, (int) PLAYER_H, Color.CORNFLOWERBLUE);
       }
