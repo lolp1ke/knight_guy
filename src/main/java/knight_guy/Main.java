@@ -195,7 +195,9 @@ public class Main extends Application implements Consts {
             t.x = SCREEN_WIDTH - PLAYER_W;
           }
 
-          t.scaleX *= ps.facingRight ? 1.0 : -1.0;
+          t.scaleX = ps.facingRight
+            ? Math.abs(t.scaleX)
+            : Math.abs(t.scaleX) * -1d;
 
           AnimatedSprite anim = world.getComponent(
             entity,
