@@ -5,8 +5,8 @@ public abstract interface Consts {
   static double SCREEN_WIDTH = 800.0;
   static double SCREEN_HEIGHT = 600.0;
 
-  static double PLAYER_W = 36.0;
-  static double PLAYER_H = 48.0;
+  static double PLAYER_W = 64.0;
+  static double PLAYER_H = 64.0;
 
   static double GRAVITY = 1200.0;
 

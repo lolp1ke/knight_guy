@@ -25,8 +25,9 @@ import knight_guy.game_engine_internals.components.Transform2D;
 import knight_guy.game_engine_internals.components.Velocity2D;
 import knight_guy.game_engine_internals.plugins.InputPlugin;
 import knight_guy.game_engine_internals.plugins.RenderPlugin;
+import knight_guy.game_engine_internals.rendering.AnimatedSprite;
 import knight_guy.game_engine_internals.rendering.MainCanvas;
-import knight_guy.game_engine_internals.rendering.Sprite;
+import knight_guy.game_engine_internals.rendering.StaticSprite;
 import knight_guy.game_engine_internals.resources.Time;
 
 public class Main extends Application implements Consts {
@@ -79,6 +80,9 @@ public class Main extends Application implements Consts {
     final double FLOOR_HEIGHT = 10.0;
     final double FLOOR_Y = SCREEN_HEIGHT - FLOOR_HEIGHT;
 
+    final double PLAYER_SPRITE_FRAME_W = 128.0d;
+    final double PLAYER_SPRITE_FRAME_H = 128.0d;
+
     engine.onEnter(GameState.Running, world -> {
       world.addResource(new PlayerState());
 
@@ -87,17 +91,31 @@ public class Main extends Application implements Consts {
         floorImg = rect((int) SCREEN_WIDTH, (int) FLOOR_HEIGHT, Color.GREEN);
       }
 
-      Image playerImg = AssetStore.load("player.png", PLAYER_W, PLAYER_H);
-      if (playerImg == null) {
-        playerImg = rect((int) PLAYER_W, (int) PLAYER_H, Color.CORNFLOWERBLUE);
-      }
+      Image playerIdleImg = AssetStore.load("player/idle.png");
+      Image playerRunImg = AssetStore.load("player/run.png");
+      Image playerJumpImg = AssetStore.load("player/jump.png");
+
+      AnimatedSprite playerSprite = new AnimatedSprite(
+        PLAYER_W,
+        PLAYER_SPRITE_FRAME_H,
+        0.15
+      );
+      playerSprite.frameWidth = PLAYER_SPRITE_FRAME_W;
+      playerSprite.frameHeight = PLAYER_SPRITE_FRAME_H;
+      playerSprite.sourceX = 0.0;
+      playerSprite.sourceY = 0.0;
+      playerSprite.offsetY = PLAYER_H - PLAYER_SPRITE_FRAME_H;
+      playerSprite.addAnimation("idle", playerIdleImg, 4);
+      playerSprite.addAnimation("run", playerRunImg, 7);
+      playerSprite.addAnimation("jump", playerJumpImg, 6);
+      playerSprite.setAnimation("idle");
 
       Entity floor = world.spawn(
-        new Sprite(floorImg),
+        new StaticSprite(floorImg),
         new Transform2D(0, FLOOR_Y)
       );
       Entity player = world.spawn(
-        new Sprite(playerImg),
+        playerSprite,
         new Transform2D(200, SCREEN_HEIGHT - FLOOR_HEIGHT - PLAYER_H),
         new Velocity2D(),
         new Player()
@@ -114,14 +132,14 @@ public class Main extends Application implements Consts {
         return;
       }
       Time time = world.getResource(Time.class);
+      Input input = world.getResource(Input.class);
 
       world
         .query(Transform2D.class, Velocity2D.class)
         .with(Player.class)
-        .forEach((_, components) -> {
+        .forEach((entity, components) -> {
           Transform2D t = (Transform2D) components[0];
           Velocity2D v = (Velocity2D) components[1];
-          Input input = world.getResource(Input.class);
 
           PlayerState ps = world.getResource(PlayerState.class);
           ps.dashCooldown -= time.delta;
@@ -162,10 +180,12 @@ public class Main extends Application implements Consts {
           t.y += v.y * time.delta;
           v.x = 0;
 
+          boolean onGround = false;
           double floorTop = FLOOR_Y;
           if (t.y + PLAYER_H >= floorTop) {
             t.y = SCREEN_HEIGHT - FLOOR_HEIGHT - PLAYER_H;
             v.y = 0;
+            onGround = true;
           }
 
           if (t.x < 0) {
@@ -173,6 +193,22 @@ public class Main extends Application implements Consts {
           }
           if (t.x + PLAYER_W > SCREEN_WIDTH) {
             t.x = SCREEN_WIDTH - PLAYER_W;
+          }
+
+          t.scaleX *= ps.facingRight ? 1.0 : -1.0;
+
+          AnimatedSprite anim = world.getComponent(
+            entity,
+            AnimatedSprite.class
+          );
+          if (anim != null) {
+            if (!onGround) {
+              anim.setAnimation("jump");
+            } else if (left || right) {
+              anim.setAnimation("run");
+            } else {
+              anim.setAnimation("idle");
+            }
           }
         });
     });
