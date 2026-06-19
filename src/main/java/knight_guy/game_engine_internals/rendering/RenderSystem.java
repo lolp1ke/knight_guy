@@ -15,15 +15,15 @@ public final class RenderSystem implements System {
 
   @Override
   public void run(World world) {
-    MainCanvas main_canvas = world.get_resource(MainCanvas.class);
-    if (main_canvas == null) {
+    MainCanvas mainCanvas = world.getResource(MainCanvas.class);
+    if (mainCanvas == null) {
       return;
     }
 
-    Camera2D camera = world.get_resource(Camera2D.class);
-    GraphicsContext gc = main_canvas.canvas.getGraphicsContext2D();
-    double w = main_canvas.canvas.getWidth();
-    double h = main_canvas.canvas.getHeight();
+    Camera2D camera = world.getResource(Camera2D.class);
+    GraphicsContext gc = mainCanvas.canvas.getGraphicsContext2D();
+    double w = mainCanvas.canvas.getWidth();
+    double h = mainCanvas.canvas.getHeight();
 
     gc.clearRect(0, 0, w, h);
     if (camera != null) {
@@ -32,12 +32,12 @@ public final class RenderSystem implements System {
     }
 
     List<DrawItem> items = new ArrayList<>();
-    world.query(Sprite.class, Transform2D.class).for_each((_, components) -> {
+    world.query(Sprite.class, Transform2D.class).forEach((_, components) -> {
       items.add(
         new DrawItem((Sprite) components[0], (Transform2D) components[1])
       );
     });
-    items.sort(Comparator.comparingInt(item -> item.sprite.z_index));
+    items.sort(Comparator.comparingInt(item -> item.sprite.zIndex));
 
     for (DrawItem item : items) {
       Sprite sprite = item.sprite;
@@ -47,8 +47,8 @@ public final class RenderSystem implements System {
           sprite.image,
           transform.x,
           transform.y,
-          sprite.width * transform.scale_x,
-          sprite.height * transform.scale_y
+          sprite.width * transform.scaleX,
+          sprite.height * transform.scaleY
         );
       }
     }

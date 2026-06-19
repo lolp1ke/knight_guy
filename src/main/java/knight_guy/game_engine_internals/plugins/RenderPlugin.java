@@ -20,8 +20,8 @@ public final class RenderPlugin implements Plugin {
 
   @Override
   public void build(Engine engine, World world) {
-    world.add_resource(new MainCanvas(this.width, this.height));
-    world.add_resource(new Camera2D());
-    engine.add_system(ScheduleStage.RENDER, new RenderSystem());
+    world.addResource(new MainCanvas(this.width, this.height));
+    world.addResource(new Camera2D());
+    engine.addSystem(ScheduleStage.RENDER, new RenderSystem());
   }
 }

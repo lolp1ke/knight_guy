@@ -12,11 +12,11 @@ public final class State<T extends States> implements Resource {
     this.state = state;
   }
 
-  void set_state(T state) {
+  void setState(T state) {
     this.state = state;
   }
 
-  public T get_state() {
+  public T getState() {
     return this.state;
   }
 }

@@ -8,8 +8,8 @@ public final class Transform2D implements Component {
   public double x;
   public double y;
   public double rotation;
-  public double scale_x;
-  public double scale_y;
+  public double scaleX;
+  public double scaleY;
 
   public Transform2D() {
     this.x = 0;
@@ -20,7 +20,7 @@ public final class Transform2D implements Component {
     this.x = x;
     this.y = y;
     this.rotation = 0;
-    this.scale_x = 1;
-    this.scale_y = 1;
+    this.scaleX = 1;
+    this.scaleY = 1;
   }
 }

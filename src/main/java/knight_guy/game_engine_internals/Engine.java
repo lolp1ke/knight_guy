@@ -14,85 +14,83 @@ public final class Engine {
   private final Schedule schedule = new Schedule();
 
   // on enters
-  private final HashMap<States, List<System>> enter_systems = new HashMap<>();
+  private final HashMap<States, List<System>> enterSystems = new HashMap<>();
   // on exits
-  private final HashMap<States, List<System>> exit_systems = new HashMap<>();
+  private final HashMap<States, List<System>> exitSystems = new HashMap<>();
 
-  public World get_world() {
+  public World getWorld() {
     return this.world;
   }
 
   // build plugin
-  public void add_plugin(Plugin plugin) {
+  public void addPlugin(Plugin plugin) {
     plugin.build(this, this.world);
   }
 
-  public void add_system(ScheduleStage stage, System system) {
-    this.schedule.add_system(stage, system);
+  public void addSystem(ScheduleStage stage, System system) {
+    this.schedule.addSystem(stage, system);
   }
 
   // appends system to execute when state enter happens
-  public <T extends States> void on_enter(T state, System system) {
-    this.enter_systems
+  public <T extends States> void onEnter(T state, System system) {
+    this.enterSystems
       .computeIfAbsent(state, _ -> new ArrayList<>())
       .add(system);
   }
 
   // appends system to execute when state exit happens
-  public <T extends States> void on_exit(T state, System system) {
-    this.exit_systems
-      .computeIfAbsent(state, _ -> new ArrayList<>())
-      .add(system);
+  public <T extends States> void onExit(T state, System system) {
+    this.exitSystems.computeIfAbsent(state, _ -> new ArrayList<>()).add(system);
   }
 
   // updates current state and runs on_exit/on_enter systems
-  public <T extends States> void set_state(T next) {
-    State<T> current_state = this.world.get_resource(State.class);
-    this.run_systems(this.exit_systems.get(current_state.get_state()));
-    current_state.set_state(next);
-    this.run_systems(this.enter_systems.get(next));
+  public <T extends States> void setState(T next) {
+    State<T> currentState = this.world.getResource(State.class);
+    this.runSystems(this.exitSystems.get(currentState.getState()));
+    currentState.setState(next);
+    this.runSystems(this.enterSystems.get(next));
   }
 
-  private void run_systems(List<System> systems) {
+  private void runSystems(List<System> systems) {
     if (systems == null) {
       return;
     }
-    for (System sys : systems) {
-      sys.run(this.world);
+    for (System system : systems) {
+      system.run(this.world);
     }
   }
 
   // initializes state and run on_enter system
-  public <T extends States> void init_state(T state) {
-    this.world.add_resource(new State<T>(state));
-    this.run_systems(this.enter_systems.get(state));
+  public <T extends States> void initState(T state) {
+    this.world.addResource(new State<T>(state));
+    this.runSystems(this.enterSystems.get(state));
   }
 
   // entry point for a game loop
   public void start() {
-    this.world.add_resource(new Time());
+    this.world.addResource(new Time());
 
     new AnimationTimer() {
-      private long last_time = 0;
+      private long lastTime = 0;
       private double accumulator = 0.0;
       private static final double TICK_RATE = 1.0 / 32.0;
 
       @Override
       public void handle(long now) {
-        if (this.last_time == 0) {
-          this.last_time = now;
+        if (this.lastTime == 0) {
+          this.lastTime = now;
           return;
         }
 
-        double delta = (now - this.last_time) / 1_000_000_000.0;
-        this.last_time = now;
+        double delta = (now - this.lastTime) / 1_000_000_000.0;
+        this.lastTime = now;
         this.accumulator += delta;
 
         schedule.run(ScheduleStage.STARTUP, world);
 
+        Time time = world.getResource(Time.class);
+        time.delta = TICK_RATE;
         while (accumulator >= TICK_RATE) {
-          Time time = world.get_resource(Time.class);
-          time.delta = TICK_RATE;
           schedule.run(ScheduleStage.PRE_UPDATE, world);
           schedule.run(ScheduleStage.UPDATE, world);
           schedule.run(ScheduleStage.POST_UPDATE, world);

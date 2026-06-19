@@ -19,7 +19,7 @@ public final class Schedule {
   }
 
   // append system to certain stage
-  public void add_system(ScheduleStage stage, System system) {
+  public void addSystem(ScheduleStage stage, System system) {
     this.systems.get(stage).add(system);
   }
 

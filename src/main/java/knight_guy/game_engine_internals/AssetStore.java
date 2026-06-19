@@ -30,8 +30,8 @@ public final class AssetStore {
   }
 
   public static Image load(String path, double width, double height) {
-    String cache_key = path + "@" + width + "x" + height;
-    Image cached = assets.get(cache_key);
+    String cacheKey = path + "@" + width + "x" + height;
+    Image cached = assets.get(cacheKey);
     if (cached != null) {
       return cached;
     }
@@ -43,7 +43,7 @@ public final class AssetStore {
     }
 
     Image img = new Image(url.toExternalForm(), width, height, false, true);
-    assets.put(cache_key, img);
+    assets.put(cacheKey, img);
     return img;
   }
 }

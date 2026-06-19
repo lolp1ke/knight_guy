@@ -19,9 +19,7 @@ public final class InputPlugin implements Plugin {
   @Override
   public void build(Engine engine, World world) {
     Input input = new Input(scene);
-    world.add_resource(input);
-    engine.add_system(ScheduleStage.POST_UPDATE, _ ->
-      input.clear_for_new_tick()
-    );
+    world.addResource(input);
+    engine.addSystem(ScheduleStage.POST_UPDATE, _ -> input.clearForNewTick());
   }
 }

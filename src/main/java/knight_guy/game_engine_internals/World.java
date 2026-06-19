@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 public final class World {
 
@@ -21,24 +20,24 @@ public final class World {
     }
   }
 
-  private final HashMap<Class<? extends Component>, Integer> component_ty_ids =
+  private final HashMap<Class<? extends Component>, Integer> componentTyIds =
     new HashMap<>();
-  private int next_component_ty_id = 0;
+  private int nextComponentTyId = 0;
 
   // map mask to archetype
   final HashMap<Long, Archetype> archetypes = new HashMap<>();
 
-  private EntityRecord[] entity_records = new EntityRecord[256];
-  private final Queue<Integer> free_entity_ids = new ArrayDeque<>();
-  private int next_entity_id = 1;
+  private EntityRecord[] entityRecords = new EntityRecord[256];
+  private final ArrayDeque<Integer> freeEntityIds = new ArrayDeque<>();
+  private int nextEntityId = 1;
 
   private final Map<Class<? extends Resource>, Resource> resources =
     new HashMap<>();
 
-  int get_component_ty_id(final Class<? extends Component> ty) {
-    return this.component_ty_ids.computeIfAbsent(ty, _ -> {
-      int id = this.next_component_ty_id;
-      this.next_component_ty_id += 1;
+  int getComponentTyId(final Class<? extends Component> ty) {
+    return this.componentTyIds.computeIfAbsent(ty, _ -> {
+      int id = this.nextComponentTyId;
+      this.nextComponentTyId += 1;
       return id;
     });
   }
@@ -46,14 +45,14 @@ public final class World {
   // create an entity
   public Entity spawn() {
     int id;
-    if (this.free_entity_ids.isEmpty()) {
-      id = this.next_entity_id;
-      this.next_entity_id += 1;
-      this.ensure_capacity(id);
+    if (this.freeEntityIds.isEmpty()) {
+      id = this.nextEntityId;
+      this.nextEntityId += 1;
+      this.ensureCapacity(id);
     } else {
-      id = this.free_entity_ids.poll();
+      id = this.freeEntityIds.poll();
     }
-    this.entity_records[id] = null;
+    this.entityRecords[id] = null;
     return new Entity(id);
   }
 
@@ -71,15 +70,15 @@ public final class World {
   // remove an entity
   public void despawn(Entity entity) {
     int id = (int) entity.id;
-    EntityRecord record = this.entity_records[id];
+    EntityRecord record = this.entityRecords[id];
     if (record != null && record.archetype != null) {
-      int moved_id = record.archetype.remove_entity(record.row);
-      if (moved_id >= 0) {
-        this.entity_records[moved_id].row = record.row;
+      int movedId = record.archetype.removeEntity(record.row);
+      if (movedId >= 0) {
+        this.entityRecords[movedId].row = record.row;
       }
     }
-    this.entity_records[id] = null;
-    this.free_entity_ids.add(id);
+    this.entityRecords[id] = null;
+    this.freeEntityIds.add(id);
   }
 
   // remove entities
@@ -91,110 +90,107 @@ public final class World {
 
   // append component to entity
   public <T extends Component> void insert(Entity entity, T component) {
-    int component_id = this.get_component_ty_id(component.getClass());
+    int componentId = this.getComponentTyId(component.getClass());
     int id = (int) entity.id;
-    this.ensure_capacity(id);
+    this.ensureCapacity(id);
 
-    EntityRecord record = this.entity_records[id];
+    EntityRecord record = this.entityRecords[id];
     if (record != null && record.archetype != null) {
-      int col = record.archetype.column_idx(component_id);
+      int col = record.archetype.columnIdx(componentId);
       if (col >= 0) {
-        record.archetype.set_component(record.row, col, component);
+        record.archetype.setComponent(record.row, col, component);
         return;
       }
-      this.move_to_archetype(
+      this.moveToArchetype(
         id,
         record,
-        record.archetype.mask | (1L << component_id),
+        record.archetype.mask | (1L << componentId),
         component
       );
     } else {
-      long mask = 1L << component_id;
-      Archetype arch = this.get_or_create_archetype(mask);
-      int row = arch.add_entity(id);
-      arch.set_component(row, arch.column_idx(component_id), component);
-      this.entity_records[id] = new EntityRecord(arch, row);
+      long mask = 1L << componentId;
+      Archetype arch = this.getOrCreateArchetype(mask);
+      int row = arch.addEntity(id);
+      arch.setComponent(row, arch.columnIdx(componentId), component);
+      this.entityRecords[id] = new EntityRecord(arch, row);
     }
   }
 
   // get a component from an entity
   // use this over querying if you want specific entity's component
-  public <T extends Component> T get_component(Entity entity, Class<T> type) {
-    int component_id = this.get_component_ty_id(type);
+  public <T extends Component> T getComponent(Entity entity, Class<T> type) {
+    int componentId = this.getComponentTyId(type);
     int id = (int) entity.id;
-    if (id >= this.entity_records.length) {
+    if (id >= this.entityRecords.length) {
       return null;
     }
-    EntityRecord record = this.entity_records[id];
+    EntityRecord record = this.entityRecords[id];
     if (record == null || record.archetype == null) {
       return null;
     }
-    int col = record.archetype.column_idx(component_id);
+    int col = record.archetype.columnIdx(componentId);
     if (col < 0) {
       return null;
     }
     return record.archetype.get(record.row, col);
   }
 
-  public <T extends Component> T remove_component(
-    Entity entity,
-    Class<T> type
-  ) {
-    int component_id = this.get_component_ty_id(type);
+  public <T extends Component> T removeComponent(Entity entity, Class<T> type) {
+    int componentId = this.getComponentTyId(type);
     int id = (int) entity.id;
-    if (id >= this.entity_records.length) {
+    if (id >= this.entityRecords.length) {
       return null;
     }
-    EntityRecord record = this.entity_records[id];
+    EntityRecord record = this.entityRecords[id];
     if (record == null || record.archetype == null) {
       return null;
     }
 
-    int col = record.archetype.column_idx(component_id);
+    int col = record.archetype.columnIdx(componentId);
     if (col < 0) {
       return null;
     }
 
     T removed = type.cast(record.archetype.columns[col][record.row]);
 
-    long old_mask = record.archetype.mask;
-    long new_mask = old_mask & ~(1L << component_id);
+    long oldMask = record.archetype.mask;
+    long newMask = oldMask & ~(1L << componentId);
 
-    if (new_mask == 0) {
-      int moved_id = record.archetype.remove_entity(record.row);
-      if (moved_id >= 0) {
-        this.entity_records[moved_id].row = record.row;
+    if (newMask == 0) {
+      int movedId = record.archetype.removeEntity(record.row);
+      if (movedId >= 0) {
+        this.entityRecords[movedId].row = record.row;
       }
-      this.entity_records[id] = null;
+      this.entityRecords[id] = null;
     } else {
-      Archetype new_arch = this.get_or_create_archetype(new_mask);
-      int new_row = new_arch.add_entity(id);
-      new_arch.copy_into(new_row, record.archetype, record.row);
+      Archetype newArch = this.getOrCreateArchetype(newMask);
+      int newRow = newArch.addEntity(id);
+      newArch.copyInto(newRow, record.archetype, record.row);
 
-      int moved_id = record.archetype.remove_entity(record.row);
-      if (moved_id >= 0) {
-        this.entity_records[moved_id].row = record.row;
+      int movedId = record.archetype.removeEntity(record.row);
+      if (movedId >= 0) {
+        this.entityRecords[movedId].row = record.row;
       }
-      this.entity_records[id] = new EntityRecord(new_arch, new_row);
+      this.entityRecords[id] = new EntityRecord(newArch, newRow);
     }
 
     return removed;
   }
 
   // checks whether entity is still in the world or it was despawned
-  public boolean is_alive(Entity entity) {
+  public boolean isAlive(Entity entity) {
     int id = (int) entity.id;
-    return id < this.entity_records.length && this.entity_records[id] != null;
+    return id < this.entityRecords.length && this.entityRecords[id] != null;
   }
 
   // retrieve resource by its type (a.k.a. class)
-  public <T extends Resource> T get_resource(final Class<T> ty) {
-    Resource r = this.resources.get(ty);
-    return r == null ? null : ty.cast(r);
+  public <T extends Resource> T getResource(final Class<T> ty) {
+    Resource resource = this.resources.get(ty);
+    return resource == null ? null : ty.cast(resource);
   }
 
   // append resource (a.k.a. class)
-  public void add_resource(final Resource resource) {
+  public void addResource(final Resource resource) {
     this.resources.put(resource.getClass(), resource);
   }
 
@@ -202,54 +198,54 @@ public final class World {
     return new Query(this, components);
   }
 
-  private void move_to_archetype(
-    int entity_id,
+  private void moveToArchetype(
+    final int entityId,
     EntityRecord record,
-    long new_mask,
-    Component extra
+    final long newMask,
+    final Component extra
   ) {
-    Archetype new_arch = this.get_or_create_archetype(new_mask);
-    int new_row = new_arch.add_entity(entity_id);
-    new_arch.copy_into(new_row, record.archetype, record.row);
+    Archetype newArch = this.getOrCreateArchetype(newMask);
+    int newRow = newArch.addEntity(entityId);
+    newArch.copyInto(newRow, record.archetype, record.row);
 
     if (extra != null) {
-      int col = new_arch.column_idx(this.get_component_ty_id(extra.getClass()));
-      new_arch.set_component(new_row, col, extra);
+      int column = newArch.columnIdx(this.getComponentTyId(extra.getClass()));
+      newArch.setComponent(newRow, column, extra);
     }
 
-    int moved_id = record.archetype.remove_entity(record.row);
-    if (moved_id >= 0) {
-      this.entity_records[moved_id].row = record.row;
+    int movedId = record.archetype.removeEntity(record.row);
+    if (movedId >= 0) {
+      this.entityRecords[movedId].row = record.row;
     }
-    this.entity_records[entity_id] = new EntityRecord(new_arch, new_row);
+    this.entityRecords[entityId] = new EntityRecord(newArch, newRow);
   }
 
-  private Archetype get_or_create_archetype(long mask) {
+  private Archetype getOrCreateArchetype(final long mask) {
     return this.archetypes.computeIfAbsent(mask, m -> {
       List<Integer> ids = new ArrayList<>();
       long temp = m;
-      int bit_idx = 0;
+      int bitIdx = 0;
       while (temp != 0) {
         if ((temp & 1l) != 0) {
-          ids.add(bit_idx);
+          ids.add(bitIdx);
         }
         // unsigned right shift
         temp >>>= 1;
-        bit_idx += 1;
+        bitIdx += 1;
       }
-      int[] component_ids = new int[ids.size()];
+      int[] componentIds = new int[ids.size()];
       for (int i = 0; i < ids.size(); i++) {
-        component_ids[i] = ids.get(i);
+        componentIds[i] = ids.get(i);
       }
-      return new Archetype(m, component_ids);
+      return new Archetype(m, componentIds);
     });
   }
 
-  private void ensure_capacity(int id) {
-    if (id >= this.entity_records.length) {
-      this.entity_records = Arrays.copyOf(
-        this.entity_records,
-        this.entity_records.length * 2
+  private void ensureCapacity(final int id) {
+    if (id >= this.entityRecords.length) {
+      this.entityRecords = Arrays.copyOf(
+        this.entityRecords,
+        this.entityRecords.length * 2
       );
     }
   }

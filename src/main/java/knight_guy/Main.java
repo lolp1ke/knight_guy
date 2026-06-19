@@ -44,92 +44,92 @@ public class Main extends Application implements Consts {
     stage.setResizable(false);
 
     Engine engine = new Engine();
-    engine.add_plugin(new RenderPlugin(SCREEN_WIDTH, SCREEN_HEIGHT));
+    engine.addPlugin(new RenderPlugin(SCREEN_WIDTH, SCREEN_HEIGHT));
 
-    MainCanvas main_canvas = engine.get_world().get_resource(MainCanvas.class);
+    MainCanvas mainCanvas = engine.getWorld().getResource(MainCanvas.class);
     Scene scene = new Scene(new StackPane(), SCREEN_WIDTH, SCREEN_HEIGHT);
-    engine.add_plugin(new InputPlugin(scene));
+    engine.addPlugin(new InputPlugin(scene));
 
-    Button play_btn = new Button("play");
-    play_btn.setOnAction(_ -> {
-      engine.set_state(GameState.Running);
+    Button playBtn = new Button("play");
+    playBtn.setOnAction(_ -> {
+      engine.setState(GameState.Running);
     });
 
-    Button exit_btn = new Button("exit");
-    exit_btn.setOnAction(_ -> {
+    Button exitBtn = new Button("exit");
+    exitBtn.setOnAction(_ -> {
       Platform.exit();
     });
 
-    VBox menu = new VBox(24, play_btn, exit_btn);
+    VBox menu = new VBox(24, playBtn, exitBtn);
     menu.setAlignment(Pos.CENTER);
 
-    StackPane root = new StackPane(main_canvas.canvas, menu);
+    StackPane root = new StackPane(mainCanvas.canvas, menu);
     scene.setRoot(root);
     stage.setScene(scene);
 
-    engine.init_state(MenuState.Menu);
+    engine.initState(MenuState.Menu);
 
-    engine.on_enter(MenuState.Menu, _ -> {
+    engine.onEnter(MenuState.Menu, _ -> {
       menu.setVisible(true);
     });
-    engine.on_exit(MenuState.Menu, _ -> {
+    engine.onExit(MenuState.Menu, _ -> {
       menu.setVisible(false);
     });
 
     final double FLOOR_HEIGHT = 10.0;
     final double FLOOR_Y = SCREEN_HEIGHT - FLOOR_HEIGHT;
 
-    engine.on_enter(GameState.Running, world -> {
-      world.add_resource(new PlayerState());
+    engine.onEnter(GameState.Running, world -> {
+      world.addResource(new PlayerState());
 
-      Image floor_img = AssetStore.load("floor.png");
-      if (floor_img == null) {
-        floor_img = rect((int) SCREEN_WIDTH, (int) FLOOR_HEIGHT, Color.GREEN);
+      Image floorImg = AssetStore.load("floor.png");
+      if (floorImg == null) {
+        floorImg = rect((int) SCREEN_WIDTH, (int) FLOOR_HEIGHT, Color.GREEN);
       }
 
-      Image player_img = AssetStore.load("player.png", PLAYER_W, PLAYER_H);
-      if (player_img == null) {
-        player_img = rect((int) PLAYER_W, (int) PLAYER_H, Color.CORNFLOWERBLUE);
+      Image playerImg = AssetStore.load("player.png", PLAYER_W, PLAYER_H);
+      if (playerImg == null) {
+        playerImg = rect((int) PLAYER_W, (int) PLAYER_H, Color.CORNFLOWERBLUE);
       }
 
       Entity floor = world.spawn(
-        new Sprite(floor_img),
+        new Sprite(floorImg),
         new Transform2D(0, FLOOR_Y)
       );
       Entity player = world.spawn(
-        new Sprite(player_img),
+        new Sprite(playerImg),
         new Transform2D(200, SCREEN_HEIGHT - FLOOR_HEIGHT - PLAYER_H),
         new Velocity2D(),
         new Player()
       );
 
-      engine.on_exit(GameState.Running, _ -> {
+      engine.onExit(GameState.Running, _ -> {
         world.despawn(floor, player);
       });
     });
 
-    engine.add_system(ScheduleStage.UPDATE, world -> {
-      State<GameState> state = world.get_resource(State.class);
-      if (state.get_state() != GameState.Running) {
+    engine.addSystem(ScheduleStage.UPDATE, world -> {
+      State<GameState> state = world.getResource(State.class);
+      if (state.getState() != GameState.Running) {
         return;
       }
+      Time time = world.getResource(Time.class);
 
       world
         .query(Transform2D.class, Velocity2D.class)
         .with(Player.class)
-        .for_each((_, components) -> {
+        .forEach((_, components) -> {
           Transform2D t = (Transform2D) components[0];
           Velocity2D v = (Velocity2D) components[1];
-          Time time = world.get_resource(Time.class);
-          Input input = world.get_resource(Input.class);
+          Input input = world.getResource(Input.class);
 
-          PlayerState ps = world.get_resource(PlayerState.class);
-          ps.dash_cooldown -= time.delta;
-          ps.dash_timer -= time.delta;
+          PlayerState ps = world.getResource(PlayerState.class);
+          ps.dashCooldown -= time.delta;
+          ps.dashTimer -= time.delta;
 
           v.y += GRAVITY * time.delta;
 
-          boolean dash_pressed = input.just_pressed(KeyCode.K);
+          boolean dashPressed = input.justPressed(KeyCode.K);
           boolean left =
             input.pressed(KeyCode.A) || input.pressed(KeyCode.LEFT);
           boolean right =
@@ -141,20 +141,20 @@ public class Main extends Application implements Consts {
 
           if (left) {
             v.x += -SPEED;
-            ps.facing_right = false;
+            ps.facingRight = false;
           } else if (right) {
             v.x += SPEED;
-            ps.facing_right = true;
+            ps.facingRight = true;
           }
 
           if (jump && t.y + PLAYER_H >= FLOOR_Y) {
             v.y = JUMP_VEL;
           }
 
-          if (dash_pressed && ps.dash_cooldown <= 0 && ps.dash_timer <= 0) {
-            ps.dash_timer = DASH_DURATION;
-            ps.dash_cooldown = DASH_COOLDOWN;
-            v.x += ps.facing_right ? DASH_SPEED : -DASH_SPEED;
+          if (dashPressed && ps.dashCooldown <= 0 && ps.dashTimer <= 0) {
+            ps.dashTimer = DASH_DURATION;
+            ps.dashCooldown = DASH_COOLDOWN;
+            v.x += ps.facingRight ? DASH_SPEED : -DASH_SPEED;
             v.y = 0;
           }
 
@@ -162,8 +162,8 @@ public class Main extends Application implements Consts {
           t.y += v.y * time.delta;
           v.x = 0;
 
-          double floor_top = FLOOR_Y;
-          if (t.y + PLAYER_H >= floor_top) {
+          double floorTop = FLOOR_Y;
+          if (t.y + PLAYER_H >= floorTop) {
             t.y = SCREEN_HEIGHT - FLOOR_HEIGHT - PLAYER_H;
             v.y = 0;
           }

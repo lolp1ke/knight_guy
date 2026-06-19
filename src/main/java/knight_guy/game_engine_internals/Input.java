@@ -7,20 +7,20 @@ import javafx.scene.input.KeyCode;
 public class Input implements Resource {
 
   private final HashSet<KeyCode> pressed = new HashSet<>();
-  private final HashSet<KeyCode> just_pressed = new HashSet<>();
-  private final HashSet<KeyCode> just_released = new HashSet<>();
+  private final HashSet<KeyCode> justPressed = new HashSet<>();
+  private final HashSet<KeyCode> justReleased = new HashSet<>();
 
   public Input(Scene scene) {
     scene.setOnKeyPressed(e -> {
       KeyCode k = e.getCode();
       if (this.pressed.add(k)) {
-        this.just_pressed.add(k);
+        this.justPressed.add(k);
       }
     });
     scene.setOnKeyReleased(e -> {
       KeyCode k = e.getCode();
       if (this.pressed.remove(k)) {
-        this.just_released.add(k);
+        this.justReleased.add(k);
       }
     });
   }
@@ -29,18 +29,18 @@ public class Input implements Resource {
     return this.pressed.contains(key);
   }
 
-  public boolean just_pressed(KeyCode key) {
-    return this.just_pressed.contains(key);
+  public boolean justPressed(KeyCode key) {
+    return this.justPressed.contains(key);
   }
 
-  public boolean just_released(KeyCode key) {
-    return this.just_released.contains(key);
+  public boolean justReleased(KeyCode key) {
+    return this.justReleased.contains(key);
   }
 
   // do not use this directly
   // for internal use cases only
-  public void clear_for_new_tick() {
-    this.just_pressed.clear();
-    this.just_released.clear();
+  public void clearForNewTick() {
+    this.justPressed.clear();
+    this.justReleased.clear();
   }
 }
