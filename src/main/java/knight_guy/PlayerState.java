@@ -7,4 +7,6 @@ public class PlayerState implements Resource {
   public double dashCooldown = 0;
   public double dashTimer = 0;
   public boolean facingRight = true;
+  public double platformDropTimer = 0;
+  public boolean onGround = false;
 }

@@ -1,4 +1,4 @@
-package knight_guy.States;
+package knight_guy.states;
 
 import knight_guy.game_engine_internals.States;
 
