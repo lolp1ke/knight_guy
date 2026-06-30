@@ -1,4 +1,4 @@
-package knight_guy.rooms;
+package knight_guy.structures;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +8,8 @@ import knight_guy.game_engine_internals.World;
 
 public final class RoomManager implements Resource {
 
-  public Room currentRoom;
-  public Room lastRoom;
+  public Structure currentRoom;
+  public Structure lastRoom;
   private final List<Entity> roomEntities = new ArrayList<>();
   // reference to player
   public Entity player;
@@ -18,7 +18,7 @@ public final class RoomManager implements Resource {
     this.roomEntities.add(e);
   }
 
-  public void transition(Room nextRoom, World world) {
+  public void transition(Structure nextRoom, World world) {
     for (Entity e : this.roomEntities) {
       if (world.isAlive(e)) {
         world.despawn(e);

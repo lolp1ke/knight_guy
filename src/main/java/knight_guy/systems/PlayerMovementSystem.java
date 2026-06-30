@@ -127,13 +127,6 @@ public final class PlayerMovementSystem implements System, Consts {
           playerVelocity.y = JUMP_VEL;
         }
 
-        if (playerTransform.x < 0) {
-          playerTransform.x = 0;
-        }
-        if (playerTransform.x + PLAYER_W > SCREEN_WIDTH) {
-          playerTransform.x = SCREEN_WIDTH - PLAYER_W;
-        }
-
         playerTransform.scaleX = playerState.facingRight
           ? Math.abs(playerTransform.scaleX)
           : Math.abs(playerTransform.scaleX) * -1d;

@@ -18,14 +18,15 @@ import knight_guy.game_engine_internals.plugins.InputPlugin;
 import knight_guy.game_engine_internals.plugins.RenderPlugin;
 import knight_guy.game_engine_internals.rendering.AnimatedSprite;
 import knight_guy.game_engine_internals.rendering.MainCanvas;
-import knight_guy.rooms.BossRoom;
-import knight_guy.rooms.EnemyRoom;
-import knight_guy.rooms.LootRoom;
-import knight_guy.rooms.RoomManager;
-import knight_guy.rooms.RoomRegistry;
-import knight_guy.rooms.StartingRoom;
 import knight_guy.states.GameState;
 import knight_guy.states.MenuState;
+import knight_guy.structures.BossRoom;
+import knight_guy.structures.EnemyRoom;
+import knight_guy.structures.LootRoom;
+import knight_guy.structures.RoomManager;
+import knight_guy.structures.RoomRegistry;
+import knight_guy.structures.StartingRoom;
+import knight_guy.systems.CameraSystem;
 import knight_guy.systems.PlayerMovementSystem;
 import knight_guy.systems.RoomSystem;
 
@@ -130,6 +131,7 @@ public class Main extends Application implements Consts {
 
     engine.addSystem(ScheduleStage.UPDATE, new PlayerMovementSystem());
     engine.addSystem(ScheduleStage.UPDATE, new RoomSystem());
+    engine.addSystem(ScheduleStage.UPDATE, new CameraSystem());
 
     stage.show();
     engine.start();

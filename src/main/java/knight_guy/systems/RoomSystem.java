@@ -6,7 +6,7 @@ import knight_guy.game_engine_internals.System;
 import knight_guy.game_engine_internals.World;
 import knight_guy.game_engine_internals.components.Transform2D;
 import knight_guy.game_engine_internals.rendering.StaticSprite;
-import knight_guy.rooms.RoomManager;
+import knight_guy.structures.RoomManager;
 
 public final class RoomSystem implements System, Consts {
 

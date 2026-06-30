@@ -1,4 +1,4 @@
-package knight_guy.rooms;
+package knight_guy.structures;
 
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -11,7 +11,7 @@ import knight_guy.game_engine_internals.World;
 import knight_guy.game_engine_internals.components.Transform2D;
 import knight_guy.game_engine_internals.rendering.StaticSprite;
 
-public class StartingRoom implements Room, Consts {
+public class StartingRoom implements Structure, Consts {
 
   @Override
   public void build(World world, RoomManager manager) {

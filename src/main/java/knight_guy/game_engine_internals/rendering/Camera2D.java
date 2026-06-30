@@ -1,9 +1,10 @@
 package knight_guy.game_engine_internals.rendering;
 
+import knight_guy.game_engine_internals.Component;
 import knight_guy.game_engine_internals.Resource;
 
 // does nothing right now
-public final class Camera2D implements Resource {
+public final class Camera2D implements Resource, Component {
 
   public double x;
   public double y;

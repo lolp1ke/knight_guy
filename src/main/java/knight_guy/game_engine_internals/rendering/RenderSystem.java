@@ -38,11 +38,13 @@ public final class RenderSystem implements System {
     double h = mainCanvas.canvas.getHeight();
 
     gc.clearRect(0, 0, w, h);
-    if (camera != null) {
-      gc.scale(camera.zoom, camera.zoom);
-    }
-
     List<DrawEntry> entries = new ArrayList<>();
+
+    if (camera != null) {
+      gc.save();
+      gc.scale(camera.zoom, camera.zoom);
+      gc.translate(-camera.x, -camera.y);
+    }
 
     world
       .query(StaticSprite.class, Transform2D.class)
@@ -113,6 +115,10 @@ public final class RenderSystem implements System {
         entry.dstWidth,
         entry.dstHeight
       );
+    }
+
+    if (camera != null) {
+      gc.restore();
     }
   }
 }

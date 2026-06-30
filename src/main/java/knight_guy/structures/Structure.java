@@ -1,7 +1,7 @@
-package knight_guy.rooms;
+package knight_guy.structures;
 
 import knight_guy.game_engine_internals.World;
 
-public interface Room {
+public interface Structure {
   void build(World world, RoomManager manager);
 }
