@@ -32,17 +32,19 @@ public final class RenderSystem implements System {
       return;
     }
 
-    Camera2D camera = world.getResource(Camera2D.class);
+    final Camera2D camera = world.getResource(Camera2D.class);
     GraphicsContext gc = mainCanvas.canvas.getGraphicsContext2D();
-    double w = mainCanvas.canvas.getWidth();
-    double h = mainCanvas.canvas.getHeight();
+    final double w = mainCanvas.canvas.getWidth();
+    final double h = mainCanvas.canvas.getHeight();
 
     gc.clearRect(0, 0, w, h);
     List<DrawEntry> entries = new ArrayList<>();
 
     if (camera != null) {
       gc.save();
-      gc.scale(camera.zoom, camera.zoom);
+      // zooming is broken
+      // don't really needed rn
+      // gc.scale(camera.zoom, camera.zoom);
       gc.translate(-camera.x, -camera.y);
     }
 
