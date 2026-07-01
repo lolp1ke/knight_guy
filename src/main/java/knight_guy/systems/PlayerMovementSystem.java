@@ -20,7 +20,7 @@ public final class PlayerMovementSystem implements System, Consts {
 
   @Override
   public void run(World world) {
-    State<GameState> state = world.getResource(State.class);
+    final State<GameState> state = world.getResource(State.class);
     if (state.getState() != GameState.Running) {
       return;
     }
@@ -34,6 +34,10 @@ public final class PlayerMovementSystem implements System, Consts {
       .forEach((entity, components) -> {
         Transform2D playerTransform = (Transform2D) components[0];
         Velocity2D playerVelocity = (Velocity2D) components[1];
+        AnimatedSprite playerSprite = world.getComponent(
+          entity,
+          AnimatedSprite.class
+        );
 
         PlayerState playerState = world.getResource(PlayerState.class);
         playerState.dashCooldown -= time.delta;
@@ -46,11 +50,15 @@ public final class PlayerMovementSystem implements System, Consts {
         boolean left = input.pressed(KeyCode.A) || input.pressed(KeyCode.LEFT);
         boolean right =
           input.pressed(KeyCode.D) || input.pressed(KeyCode.RIGHT);
+        // boolean can_move =
+        //   ((left || right) && playerState.attackCooldown <= 0) ||
+        //   ((left || right) && !playerState.onGround);
         boolean jump =
           input.pressed(KeyCode.W) ||
           input.pressed(KeyCode.UP) ||
           input.pressed(KeyCode.SPACE);
         boolean drop = input.pressed(KeyCode.S) || input.pressed(KeyCode.DOWN);
+        playerState.moving = left || right;
 
         if (drop && playerState.platformDropTimer <= 0) {
           playerState.platformDropTimer = time.delta;
@@ -83,8 +91,12 @@ public final class PlayerMovementSystem implements System, Consts {
 
         playerState.onGround = false;
 
-        if (playerTransform.y + PLAYER_H >= FLOOR_Y) {
-          playerTransform.y = FLOOR_Y - PLAYER_H;
+        // offset so sprite render actually represents hitbox
+        playerSprite.offsetX =
+          -PLAYER_W * (playerState.facingRight ? 0.5d : 1.5d);
+
+        if (playerTransform.y + PLAYER_H / 2 >= FLOOR_Y + 5) {
+          playerTransform.y = FLOOR_Y - PLAYER_H / 2 + 5;
           playerVelocity.y = 0;
           playerState.onGround = true;
         }
@@ -99,13 +111,15 @@ public final class PlayerMovementSystem implements System, Consts {
               StaticSprite platformSprite = (StaticSprite) components_[1];
 
               double platformTop = platformTransform.y;
-              double playerBottom = playerTransform.y + PLAYER_H;
+              double playerBottom = playerTransform.y + PLAYER_H / 2;
               double playerPrevBottom =
                 playerBottom - playerVelocity.y * time.delta;
 
               boolean horizOverlap =
-                playerTransform.x + PLAYER_W > platformTransform.x &&
-                playerTransform.x < platformTransform.x + platformSprite.width;
+                playerTransform.x + PLAYER_W / 2 - 20.0d >
+                  platformTransform.x &&
+                playerTransform.x - PLAYER_W / 2 + 20.0d <
+                  platformTransform.x + platformSprite.width;
 
               if (!horizOverlap) {
                 return;
@@ -117,7 +131,7 @@ public final class PlayerMovementSystem implements System, Consts {
 
               if (crossingTop) {
                 playerState.onGround = true;
-                playerTransform.y = platformTop - PLAYER_H;
+                playerTransform.y = platformTop - PLAYER_H / 2;
                 playerVelocity.y = 0;
               }
             });
@@ -132,7 +146,10 @@ public final class PlayerMovementSystem implements System, Consts {
           : Math.abs(playerTransform.scaleX) * -1d;
 
         AnimatedSprite anim = world.getComponent(entity, AnimatedSprite.class);
-        if (anim != null) {
+        if (anim != null && (anim.finished || anim.isLooping())) {
+          if (anim.finished) {
+            anim.finished = false;
+          }
           if (!playerState.onGround) {
             anim.setAnimation("jump");
           } else if (left || right) {

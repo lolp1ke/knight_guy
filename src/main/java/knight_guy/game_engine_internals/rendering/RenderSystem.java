@@ -5,6 +5,10 @@ import java.util.Comparator;
 import java.util.List;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import knight_guy.Consts;
+import knight_guy.Player;
+import knight_guy.PlayerState;
 import knight_guy.game_engine_internals.System;
 import knight_guy.game_engine_internals.World;
 import knight_guy.game_engine_internals.components.Transform2D;
@@ -93,8 +97,10 @@ public final class RenderSystem implements System {
             image,
             anim.sourceX + anim.frame * anim.frameWidth,
             anim.sourceY,
-            anim.width,
-            anim.height,
+            anim.frameWidth,
+            anim.frameHeight,
+            // anim.width,
+            // anim.height,
             transform.x + anim.offsetX - Math.min(0, dw),
             transform.y + anim.offsetY - Math.min(0, dh),
             dw,
@@ -117,6 +123,26 @@ public final class RenderSystem implements System {
         entry.dstWidth,
         entry.dstHeight
       );
+    }
+
+    // DEBUG: player hitbox
+    PlayerState ps = world.getResource(PlayerState.class);
+    if (ps != null) {
+      world
+        .query(Transform2D.class)
+        .with(Player.class)
+        .forEach((_, components) -> {
+          Transform2D t = (Transform2D) components[0];
+
+          gc.setStroke(Color.RED);
+          gc.setLineWidth(2);
+          gc.strokeRect(
+            t.x - Consts.PLAYER_W / 2 + 20,
+            t.y - Consts.PLAYER_H / 2,
+            Consts.PLAYER_W / 2.0d,
+            Consts.PLAYER_H
+          );
+        });
     }
 
     if (camera != null) {

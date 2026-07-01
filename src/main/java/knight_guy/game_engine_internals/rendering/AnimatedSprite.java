@@ -6,7 +6,11 @@ import javafx.scene.image.Image;
 // each animation tag has its own image strip (horizontal frames)
 public final class AnimatedSprite extends Sprite {
 
-  private static final record AnimDef(Image image, int frameCount) {}
+  private static final record AnimDef(
+    Image image,
+    int frameCount,
+    boolean loop
+  ) {}
 
   public double offsetX;
   public double offsetY;
@@ -19,6 +23,8 @@ public final class AnimatedSprite extends Sprite {
   public int frame;
   public double frameTimer;
   public double frameDuration;
+
+  public boolean finished;
 
   public String animationTag;
   private final HashMap<String, AnimDef> animations;
@@ -43,7 +49,16 @@ public final class AnimatedSprite extends Sprite {
   }
 
   public void addAnimation(String tag, Image image, int frameCount) {
-    this.animations.put(tag, new AnimDef(image, frameCount));
+    this.addAnimation(tag, image, frameCount, true);
+  }
+
+  public void addAnimation(
+    String tag,
+    Image image,
+    int frameCount,
+    boolean loop
+  ) {
+    this.animations.put(tag, new AnimDef(image, frameCount, loop));
   }
 
   public void setAnimation(String tag) {
@@ -52,7 +67,12 @@ public final class AnimatedSprite extends Sprite {
       this.currentAnim = this.animations.get(tag);
       this.frame = 0;
       this.frameTimer = 0;
+      this.finished = false;
     }
+  }
+
+  public boolean isLooping() {
+    return currentAnim == null || currentAnim.loop;
   }
 
   public Image getCurrentImage() {

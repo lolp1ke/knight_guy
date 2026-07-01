@@ -15,6 +15,8 @@ public abstract interface Consts {
   static final double DASH_COOLDOWN = 1.0;
   static final double DASH_DURATION = 0.15;
 
+  static final double ATTACK_COMBO_THRESHOLD = 0.3;
+
   static final double JUMP_VEL = -580.0;
 
   static final double FLOOR_Y = 585.0;

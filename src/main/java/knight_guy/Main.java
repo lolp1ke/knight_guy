@@ -27,6 +27,7 @@ import knight_guy.structures.RoomManager;
 import knight_guy.structures.RoomRegistry;
 import knight_guy.structures.StartingRoom;
 import knight_guy.systems.CameraSystem;
+import knight_guy.systems.PlayerAttackSystem;
 import knight_guy.systems.PlayerMovementSystem;
 import knight_guy.systems.RoomSystem;
 
@@ -82,14 +83,24 @@ public class Main extends Application implements Consts {
 
     // player init system
     engine.onEnter(GameState.Running, world -> {
-      world.addResource(new PlayerState());
+      PlayerState playerState = new PlayerState();
+      world.addResource(playerState);
 
-      Image playerIdleImg = AssetStore.load("player/idle.png");
-      Image playerRunImg = AssetStore.load("player/run.png");
-      Image playerJumpImg = AssetStore.load("player/jump.png");
+      final Image playerIdleImg = AssetStore.load("player/idle.png");
+      final Image playerRunImg = AssetStore.load("player/run.png");
+      final Image playerJumpImg = AssetStore.load("player/jump.png");
+      final Image playerAttack1Img = AssetStore.load("player/attack1.png");
+      final Image playerAttack2Img = AssetStore.load("player/attack2.png");
+      final Image playerAttack3Img = AssetStore.load("player/attack3.png");
+      final Image playerRunningAttackImg = AssetStore.load(
+        "player/running_attack.png"
+      );
+      final Image playerHurtImg = AssetStore.load("player/hurt.png");
+      final Image playerDeadImg = AssetStore.load("player/dead.png");
 
       AnimatedSprite playerSprite = new AnimatedSprite(
-        PLAYER_W,
+        // PLAYER_W,
+        PLAYER_SPRITE_FRAME_W,
         PLAYER_SPRITE_FRAME_H,
         0.15
       );
@@ -97,11 +108,22 @@ public class Main extends Application implements Consts {
       playerSprite.frameHeight = PLAYER_SPRITE_FRAME_H;
       playerSprite.sourceX = 0.0;
       playerSprite.sourceY = 0.0;
-      playerSprite.offsetY = PLAYER_H - PLAYER_SPRITE_FRAME_H;
+      playerSprite.offsetY = PLAYER_H / 2 - PLAYER_SPRITE_FRAME_H;
       // adjust frame count if player sprite changes
       playerSprite.addAnimation("idle", playerIdleImg, 4);
       playerSprite.addAnimation("run", playerRunImg, 7);
       playerSprite.addAnimation("jump", playerJumpImg, 6);
+      playerSprite.addAnimation("attack1", playerAttack1Img, 5, false);
+      playerSprite.addAnimation("attack2", playerAttack2Img, 4, false);
+      playerSprite.addAnimation("attack3", playerAttack3Img, 4, false);
+      playerSprite.addAnimation(
+        "running_attack",
+        playerRunningAttackImg,
+        6,
+        false
+      );
+      playerSprite.addAnimation("hurt", playerHurtImg, 2, false);
+      playerSprite.addAnimation("dead", playerDeadImg, 6, false);
       playerSprite.setAnimation("idle");
 
       Entity player = world.spawn(
@@ -130,6 +152,7 @@ public class Main extends Application implements Consts {
     });
 
     engine.addSystem(ScheduleStage.UPDATE, new PlayerMovementSystem());
+    engine.addSystem(ScheduleStage.UPDATE, new PlayerAttackSystem());
     engine.addSystem(ScheduleStage.UPDATE, new RoomSystem());
     engine.addSystem(ScheduleStage.UPDATE, new CameraSystem());
 

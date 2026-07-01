@@ -16,10 +16,23 @@ public final class AnimationSystem implements System {
 
     world.query(AnimatedSprite.class).forEach((_, components) -> {
       AnimatedSprite anim = (AnimatedSprite) components[0];
+      if (anim.finished) {
+        return;
+      }
       anim.frameTimer += time.delta;
       if (anim.frameTimer >= anim.frameDuration) {
+        int next = anim.frame + 1;
+        if (next >= anim.getCurrentFrameCount()) {
+          if (anim.isLooping()) {
+            anim.frame = 0;
+          } else {
+            anim.frame = anim.getCurrentFrameCount() - 1;
+            anim.finished = true;
+          }
+        } else {
+          anim.frame = next;
+        }
         anim.frameTimer -= anim.frameDuration;
-        anim.frame = (anim.frame + 1) % anim.getCurrentFrameCount();
       }
     });
   }

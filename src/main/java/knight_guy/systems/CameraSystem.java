@@ -23,11 +23,11 @@ public final class CameraSystem implements System, Consts {
       .query(Transform2D.class)
       .with(Player.class)
       .forEach((_, components) -> {
-        Transform2D playerTransform = (Transform2D) components[0];
+        final Transform2D playerTransform = (Transform2D) components[0];
 
         final Transform2D newCameraPos = new Transform2D(
-          playerTransform.x + PLAYER_W / 2.0d - SCREEN_WIDTH / 2.0d,
-          playerTransform.y + PLAYER_H / 2.0d - SCREEN_HEIGHT / 2.0d
+          playerTransform.x - SCREEN_WIDTH / 2.0d,
+          playerTransform.y - SCREEN_HEIGHT / 2.0d
         );
         camera.lerp(newCameraPos, smoothness * time.delta);
       });

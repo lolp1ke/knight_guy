@@ -25,10 +25,10 @@ public final class RoomSystem implements System, Consts {
       Transform2D.class
     );
 
-    double pLeft = playerTransform.x;
-    double pRight = playerTransform.x + PLAYER_W;
-    double pTop = playerTransform.y + PLAYER_H;
-    double pBottom = playerTransform.y;
+    double pLeft = playerTransform.x - PLAYER_W / 2;
+    double pRight = playerTransform.x + PLAYER_W / 2;
+    double pTop = playerTransform.y - PLAYER_H / 2;
+    double pBottom = playerTransform.y + PLAYER_H / 2;
 
     world
       .query(Transform2D.class, StaticSprite.class, Exit.class)
