@@ -5,6 +5,7 @@ import knight_guy.Consts;
 import knight_guy.Platform;
 import knight_guy.Player;
 import knight_guy.PlayerState;
+import knight_guy.SolidPlatform;
 import knight_guy.game_engine_internals.Input;
 import knight_guy.game_engine_internals.State;
 import knight_guy.game_engine_internals.System;
@@ -44,20 +45,28 @@ public final class PlayerMovementSystem implements System, Consts {
         playerState.dashTimer -= time.delta;
         playerState.platformDropTimer -= time.delta;
 
-        playerVelocity.y += GRAVITY * time.delta;
+        playerState.climbing = false;
+        // climable tubes or something
+
+        if (playerState.climbing) {
+          boolean climbUp = input.pressed(KeyCode.W);
+          boolean climbDown = input.pressed(KeyCode.S);
+          playerVelocity.y = 0;
+          if (climbUp) {
+            playerVelocity.y = -CLIMB_SPEED;
+          } else if (climbDown) {
+            playerVelocity.y = CLIMB_SPEED;
+          }
+          playerState.onGround = true;
+        } else {
+          playerVelocity.y += GRAVITY * time.delta;
+        }
 
         boolean dashPressed = input.justPressed(KeyCode.K);
-        boolean left = input.pressed(KeyCode.A) || input.pressed(KeyCode.LEFT);
-        boolean right =
-          input.pressed(KeyCode.D) || input.pressed(KeyCode.RIGHT);
-        // boolean can_move =
-        //   ((left || right) && playerState.attackCooldown <= 0) ||
-        //   ((left || right) && !playerState.onGround);
-        boolean jump =
-          input.pressed(KeyCode.W) ||
-          input.pressed(KeyCode.UP) ||
-          input.pressed(KeyCode.SPACE);
-        boolean drop = input.pressed(KeyCode.S) || input.pressed(KeyCode.DOWN);
+        boolean left = input.pressed(KeyCode.A);
+        boolean right = input.pressed(KeyCode.D);
+        boolean jump = input.pressed(KeyCode.W) || input.pressed(KeyCode.SPACE);
+        boolean drop = input.pressed(KeyCode.S);
         playerState.moving = left || right;
 
         if (drop && playerState.platformDropTimer <= 0) {
@@ -89,17 +98,78 @@ public final class PlayerMovementSystem implements System, Consts {
         playerTransform.y += playerVelocity.y * time.delta;
         playerVelocity.x = 0;
 
+        if (playerState.onGround) {
+          playerState.fallStartY = playerTransform.y;
+        }
         playerState.onGround = false;
+
+        world
+          .query(Transform2D.class, StaticSprite.class)
+          .with(SolidPlatform.class)
+          .forEach((_, components_) -> {
+            Transform2D solidTransform = (Transform2D) components_[0];
+            StaticSprite solidSprite = (StaticSprite) components_[1];
+
+            double playerLeft = playerTransform.x - PLAYER_W / 2;
+            double playerRight = playerTransform.x + PLAYER_W / 2;
+            double playerTop = playerTransform.y - PLAYER_H / 2;
+            double playerBottom = playerTransform.y + PLAYER_H / 2;
+
+            double platLeft = solidTransform.x;
+            double platRight = solidTransform.x + solidSprite.width;
+            double platTop = solidTransform.y;
+            double platBottom = solidTransform.y + solidSprite.height;
+
+            if (
+              playerRight <= platLeft ||
+              playerLeft >= platRight ||
+              playerBottom <= platTop ||
+              playerTop >= platBottom
+            ) {
+              return;
+            }
+
+            double overlapLeft = playerRight - platLeft;
+            double overlapRight = platRight - playerLeft;
+            double overlapTop = playerBottom - platTop;
+            double overlapBottom = platBottom - playerTop;
+
+            double minOverlapX = Math.min(overlapLeft, overlapRight);
+            double minOverlapY = Math.min(overlapTop, overlapBottom);
+
+            if (minOverlapX < minOverlapY) {
+              if (overlapLeft < overlapRight) {
+                playerTransform.x = platLeft - PLAYER_W / 2;
+              } else {
+                playerTransform.x = platRight + PLAYER_W / 2;
+              }
+              playerVelocity.x = 0;
+            } else {
+              if (overlapTop < overlapBottom) {
+                playerTransform.y = platTop - PLAYER_H / 2;
+                if (playerVelocity.y >= 0) {
+                  if (!playerState.onGround) {
+                    double fallDist =
+                      playerState.fallStartY - playerTransform.y;
+                    if (fallDist > 400) {
+                      playerState.hp -= 1;
+                    }
+                  }
+                  playerState.onGround = true;
+                  playerVelocity.y = 0;
+                }
+              } else {
+                playerTransform.y = platBottom + PLAYER_H / 2;
+                if (playerVelocity.y < 0) {
+                  playerVelocity.y = 0;
+                }
+              }
+            }
+          });
 
         // offset so sprite render actually represents hitbox
         playerSprite.offsetX =
           -PLAYER_W * (playerState.facingRight ? 0.5d : 1.5d);
-
-        if (playerTransform.y + PLAYER_H / 2 >= FLOOR_Y + 5) {
-          playerTransform.y = FLOOR_Y - PLAYER_H / 2 + 5;
-          playerVelocity.y = 0;
-          playerState.onGround = true;
-        }
 
         if (playerVelocity.y >= 0 && playerState.platformDropTimer <= 0) {
           world
@@ -130,6 +200,12 @@ public final class PlayerMovementSystem implements System, Consts {
                 playerBottom >= platformTop;
 
               if (crossingTop) {
+                if (!playerState.onGround) {
+                  double fallDist = playerState.fallStartY - playerTransform.y;
+                  if (fallDist > 400) {
+                    playerState.hp -= 1;
+                  }
+                }
                 playerState.onGround = true;
                 playerTransform.y = platformTop - PLAYER_H / 2;
                 playerVelocity.y = 0;
@@ -139,6 +215,7 @@ public final class PlayerMovementSystem implements System, Consts {
 
         if (jump && playerState.onGround) {
           playerVelocity.y = JUMP_VEL;
+          playerState.climbing = false;
         }
 
         playerTransform.scaleX = playerState.facingRight

@@ -7,14 +7,14 @@ import knight_guy.game_engine_internals.Resource;
 
 public final class RoomRegistry implements Resource {
 
-  private final List<Structure> factories = new ArrayList<>();
+  private final List<Room> factories = new ArrayList<>();
 
-  public RoomRegistry add(Structure factory) {
+  public RoomRegistry add(Room factory) {
     this.factories.add(factory);
     return this;
   }
 
-  public Structure random() {
+  public Room random() {
     return factories.get(
       RandomGenerator.getDefault().nextInt(this.factories.size())
     );

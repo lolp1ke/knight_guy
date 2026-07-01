@@ -39,9 +39,6 @@ public class Main extends Application implements Consts {
 
   @Override
   public void start(Stage stage) throws Exception {
-    // THIS IS JUST A DEMO NOT A GAME ITSELF
-    // PROOF OF CONCEPT OF THE GAME ENGINE NO MORE NO LESS
-
     stage.setTitle("The Knight Guy");
     stage.setResizable(false);
 

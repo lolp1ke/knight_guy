@@ -13,5 +13,7 @@ public class PlayerState implements Resource {
   public int attackVariation = 1;
   public double attackComboTimer = 0;
   public double attackCooldown = 0;
-  public double hp = 3;
+  public int hp = 3;
+  public double fallStartY = 0;
+  public boolean climbing = false;
 }

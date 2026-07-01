@@ -1,13 +1,13 @@
 package knight_guy;
 
 import knight_guy.game_engine_internals.Component;
-import knight_guy.structures.Structure;
+import knight_guy.structures.Room;
 
 public final class Exit implements Component {
 
-  public Structure target;
+  public Room target;
 
-  public Exit(Structure target) {
+  public Exit(Room target) {
     this.target = target;
   }
 }

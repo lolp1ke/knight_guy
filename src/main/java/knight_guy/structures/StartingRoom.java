@@ -5,13 +5,14 @@ import javafx.scene.paint.Color;
 import knight_guy.Consts;
 import knight_guy.Exit;
 import knight_guy.Platform;
+import knight_guy.SolidPlatform;
 import knight_guy.Utils;
 import knight_guy.game_engine_internals.AssetStore;
 import knight_guy.game_engine_internals.World;
 import knight_guy.game_engine_internals.components.Transform2D;
 import knight_guy.game_engine_internals.rendering.StaticSprite;
 
-public class StartingRoom implements Structure, Consts {
+public class StartingRoom implements Room, Consts {
 
   @Override
   public void build(World world, RoomManager manager) {
@@ -30,10 +31,14 @@ public class StartingRoom implements Structure, Consts {
       exitImg = Utils.rect(32, 64, Color.LIME);
     }
 
-    double FLOOR_Y = SCREEN_HEIGHT - 10;
+    final double FLOOR_Y = SCREEN_HEIGHT - 10;
 
     manager.addEntity(
-      world.spawn(new StaticSprite(floorImg), new Transform2D(0, FLOOR_Y))
+      world.spawn(
+        new StaticSprite(floorImg),
+        new Transform2D(0, FLOOR_Y),
+        new SolidPlatform()
+      )
     );
 
     manager.addEntity(
@@ -67,7 +72,7 @@ public class StartingRoom implements Structure, Consts {
     manager.addEntity(
       world.spawn(
         new StaticSprite(exitImg, 32, 92),
-        new Transform2D(SCREEN_WIDTH - 32 * 4, FLOOR_Y - 92),
+        new Transform2D(SCREEN_WIDTH - 32, FLOOR_Y - 92),
         new Exit(registry.random())
       )
     );

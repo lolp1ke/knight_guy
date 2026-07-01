@@ -69,6 +69,7 @@ public final class Engine {
   // entry point for a game loop
   public void start() {
     this.world.addResource(new Time());
+    schedule.run(ScheduleStage.STARTUP, world);
 
     new AnimationTimer() {
       private long lastTime = 0;
@@ -86,11 +87,9 @@ public final class Engine {
         this.lastTime = now;
         this.accumulator += delta;
 
-        schedule.run(ScheduleStage.STARTUP, world);
-
         Time time = world.getResource(Time.class);
         time.delta = TICK_RATE;
-        while (accumulator >= TICK_RATE) {
+        while (this.accumulator >= TICK_RATE) {
           schedule.run(ScheduleStage.PRE_UPDATE, world);
           schedule.run(ScheduleStage.UPDATE, world);
           schedule.run(ScheduleStage.POST_UPDATE, world);

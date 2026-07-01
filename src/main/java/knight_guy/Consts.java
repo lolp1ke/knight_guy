@@ -20,4 +20,6 @@ public abstract interface Consts {
   static final double JUMP_VEL = -580.0;
 
   static final double FLOOR_Y = 585.0;
+
+  static final double CLIMB_SPEED = 200.0;
 }
