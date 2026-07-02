@@ -1,4 +1,4 @@
-package knight_guy.structures;
+package knight_guy.rooms;
 
 import java.util.ArrayList;
 import java.util.List;

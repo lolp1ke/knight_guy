@@ -1,8 +1,8 @@
-package knight_guy.structures;
+package knight_guy.rooms;
 
 import knight_guy.game_engine_internals.World;
 
-public class EnemyRoom implements Room {
+public class BossRoom implements Room {
 
   @Override
   public void build(World world, RoomManager manager) {}

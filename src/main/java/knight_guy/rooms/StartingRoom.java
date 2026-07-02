@@ -1,4 +1,4 @@
-package knight_guy.structures;
+package knight_guy.rooms;
 
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
