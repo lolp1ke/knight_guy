@@ -8,7 +8,7 @@ import knight_guy.game_engine_internals.resources.Time;
 
 public final class Engine {
 
-  // Engine's data storage
+  // engine's data storage
   private final World world = new World();
   // contains systems, basically callbacks
   private final Schedule schedule = new Schedule();

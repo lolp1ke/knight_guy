@@ -18,15 +18,14 @@ import knight_guy.game_engine_internals.plugins.InputPlugin;
 import knight_guy.game_engine_internals.plugins.RenderPlugin;
 import knight_guy.game_engine_internals.rendering.AnimatedSprite;
 import knight_guy.game_engine_internals.rendering.MainCanvas;
-import knight_guy.rooms.BossRoom;
-import knight_guy.rooms.EnemyRoom;
-import knight_guy.rooms.LootRoom;
+import knight_guy.rooms.DungeonRoom;
 import knight_guy.rooms.RoomManager;
 import knight_guy.rooms.RoomRegistry;
-import knight_guy.rooms.StartingRoom;
 import knight_guy.states.GameState;
 import knight_guy.states.MenuState;
 import knight_guy.systems.CameraSystem;
+import knight_guy.systems.DamageSystem;
+import knight_guy.systems.HealthBarRenderSystem;
 import knight_guy.systems.PlayerAttackSystem;
 import knight_guy.systems.PlayerMovementSystem;
 import knight_guy.systems.RoomSystem;
@@ -96,7 +95,6 @@ public class Main extends Application implements Consts {
       final Image playerDeadImg = AssetStore.load("player/dead.png");
 
       AnimatedSprite playerSprite = new AnimatedSprite(
-        // PLAYER_W,
         PLAYER_SPRITE_FRAME_W,
         PLAYER_SPRITE_FRAME_H,
         0.15
@@ -106,6 +104,7 @@ public class Main extends Application implements Consts {
       playerSprite.sourceX = 0.0;
       playerSprite.sourceY = 0.0;
       playerSprite.offsetY = PLAYER_H / 2 - PLAYER_SPRITE_FRAME_H;
+      playerSprite.zIndex = 100;
       // adjust frame count if player sprite changes
       playerSprite.addAnimation("idle", playerIdleImg, 4);
       playerSprite.addAnimation("run", playerRunImg, 7);
@@ -130,18 +129,13 @@ public class Main extends Application implements Consts {
         new Player()
       );
 
-      world.addResource(
-        new RoomRegistry()
-          .add(new LootRoom())
-          .add(new EnemyRoom())
-          .add(new BossRoom())
-      );
+      world.addResource(new RoomRegistry());
 
       RoomManager manager = new RoomManager();
       manager.player = player;
       world.addResource(manager);
 
-      manager.transition(new StartingRoom(), world);
+      manager.transition(new DungeonRoom(), world);
 
       engine.onExit(GameState.Running, _ -> {
         world.despawn(player);
@@ -152,6 +146,9 @@ public class Main extends Application implements Consts {
     engine.addSystem(ScheduleStage.UPDATE, new PlayerAttackSystem());
     engine.addSystem(ScheduleStage.UPDATE, new RoomSystem());
     engine.addSystem(ScheduleStage.UPDATE, new CameraSystem());
+
+    engine.addSystem(ScheduleStage.UPDATE, new DamageSystem());
+    engine.addSystem(ScheduleStage.RENDER, new HealthBarRenderSystem());
 
     stage.show();
     engine.start();

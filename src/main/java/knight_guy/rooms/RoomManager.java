@@ -5,6 +5,7 @@ import java.util.List;
 import knight_guy.game_engine_internals.Entity;
 import knight_guy.game_engine_internals.Resource;
 import knight_guy.game_engine_internals.World;
+import knight_guy.game_engine_internals.components.Transform2D;
 
 public final class RoomManager implements Resource {
 
@@ -28,5 +29,13 @@ public final class RoomManager implements Resource {
     this.lastRoom = this.currentRoom;
     this.currentRoom = nextRoom;
     nextRoom.build(world, this);
+
+    // Move the player to the room spawn position
+    Transform2D playerTransform = world.getComponent(player, Transform2D.class);
+
+    if (playerTransform != null) {
+      playerTransform.x = 100;
+      playerTransform.y = 300;
+    }
   }
 }

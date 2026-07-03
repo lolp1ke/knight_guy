@@ -58,6 +58,16 @@ public final class CameraSystem implements System, Consts {
             playerTransform.y - SCREEN_HEIGHT / 2.0d
           );
           camera.lerp(newCameraPos, SMOOTHNESS * time.delta);
+
+          // Keep camera inside the level bounds
+          camera.x = Math.max(
+            0,
+            Math.min(camera.x, LEVEL_WIDTH - SCREEN_WIDTH)
+          );
+          camera.y = Math.max(
+            0,
+            Math.min(camera.y, LEVEL_HEIGHT - SCREEN_HEIGHT)
+          );
         });
     }
   }

@@ -45,22 +45,7 @@ public final class PlayerMovementSystem implements System, Consts {
         playerState.dashTimer -= time.delta;
         playerState.platformDropTimer -= time.delta;
 
-        playerState.climbing = false;
-        // climable tubes or something
-
-        if (playerState.climbing) {
-          boolean climbUp = input.pressed(KeyCode.W);
-          boolean climbDown = input.pressed(KeyCode.S);
-          playerVelocity.y = 0;
-          if (climbUp) {
-            playerVelocity.y = -CLIMB_SPEED;
-          } else if (climbDown) {
-            playerVelocity.y = CLIMB_SPEED;
-          }
-          playerState.onGround = true;
-        } else {
-          playerVelocity.y += GRAVITY * time.delta;
-        }
+        playerVelocity.y += GRAVITY * time.delta;
 
         boolean dashPressed = input.justPressed(KeyCode.K);
         boolean left = input.pressed(KeyCode.A);
@@ -94,6 +79,13 @@ public final class PlayerMovementSystem implements System, Consts {
           playerVelocity.y = 0;
         }
 
+        // keep the player inside the level
+        if (playerTransform.x < PLAYER_W / 2) {
+          playerTransform.x = PLAYER_W / 2;
+        }
+        if (playerTransform.x > LEVEL_WIDTH - PLAYER_W / 2) {
+          playerTransform.x = LEVEL_WIDTH - PLAYER_W / 2;
+        }
         playerTransform.x += playerVelocity.x * time.delta;
         playerTransform.y += playerVelocity.y * time.delta;
         playerVelocity.x = 0;
@@ -215,7 +207,6 @@ public final class PlayerMovementSystem implements System, Consts {
 
         if (jump && playerState.onGround) {
           playerVelocity.y = JUMP_VEL;
-          playerState.climbing = false;
         }
 
         playerTransform.scaleX = playerState.facingRight
