@@ -6,15 +6,29 @@ import java.util.List;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
-import knight_guy.Consts;
-import knight_guy.Player;
-import knight_guy.PlayerState;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
 import knight_guy.game_engine_internals.System;
 import knight_guy.game_engine_internals.World;
 import knight_guy.game_engine_internals.components.Transform2D;
 
 // helper class to draw stuff
 public final class RenderSystem implements System {
+
+  // built once and reused - a soft darkening at the screen edges gives the
+  // scene some depth instead of everything being flat and equally lit
+  private static final RadialGradient VIGNETTE = new RadialGradient(
+    0,
+    0,
+    0.5,
+    0.5,
+    0.75,
+    true,
+    CycleMethod.NO_CYCLE,
+    new Stop(0.55, Color.TRANSPARENT),
+    new Stop(1.0, Color.rgb(0, 0, 0, 0.45))
+  );
 
   private record DrawEntry(
     int zIndex,
@@ -125,28 +139,11 @@ public final class RenderSystem implements System {
       );
     }
 
-    // DEBUG: player hitbox
-    PlayerState ps = world.getResource(PlayerState.class);
-    if (ps != null) {
-      world
-        .query(Transform2D.class)
-        .with(Player.class)
-        .forEach((_, components) -> {
-          Transform2D t = (Transform2D) components[0];
-
-          gc.setStroke(Color.RED);
-          gc.setLineWidth(2);
-          gc.strokeRect(
-            t.x - Consts.PLAYER_W / 2 + 20,
-            t.y - Consts.PLAYER_H / 2,
-            Consts.PLAYER_W / 2.0d,
-            Consts.PLAYER_H
-          );
-        });
-    }
-
     if (camera != null) {
       gc.restore();
     }
+
+    gc.setFill(VIGNETTE);
+    gc.fillRect(0, 0, w, h);
   }
 }

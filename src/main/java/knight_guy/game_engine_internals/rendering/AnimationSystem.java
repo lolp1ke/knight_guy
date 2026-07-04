@@ -19,8 +19,9 @@ public final class AnimationSystem implements System {
       if (anim.finished) {
         return;
       }
+      double duration = anim.getCurrentFrameDuration();
       anim.frameTimer += time.delta;
-      if (anim.frameTimer >= anim.frameDuration) {
+      if (anim.frameTimer >= duration) {
         int next = anim.frame + 1;
         if (next >= anim.getCurrentFrameCount()) {
           if (anim.isLooping()) {
@@ -32,7 +33,7 @@ public final class AnimationSystem implements System {
         } else {
           anim.frame = next;
         }
-        anim.frameTimer -= anim.frameDuration;
+        anim.frameTimer -= duration;
       }
     });
   }

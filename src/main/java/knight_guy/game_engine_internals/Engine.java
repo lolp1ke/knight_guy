@@ -74,7 +74,10 @@ public final class Engine {
     new AnimationTimer() {
       private long lastTime = 0;
       private double accumulator = 0.0;
-      private static final double TICK_RATE = 1.0 / 32.0;
+      // was 1/32 - 32 physics ticks/sec was visibly choppy for movement,
+      // camera follow, and animation frame timing on any display faster
+      // than that; 60Hz is the standard smooth baseline
+      private static final double TICK_RATE = 1.0 / 60.0;
 
       @Override
       public void handle(long now) {

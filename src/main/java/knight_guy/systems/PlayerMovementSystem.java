@@ -41,54 +41,100 @@ public final class PlayerMovementSystem implements System, Consts {
         );
 
         PlayerState playerState = world.getResource(PlayerState.class);
+
+        // once dead, freeze in place and let the death-check system in
+        // Main.java own the animation/state transition from here on
+        if (playerState.isDead()) {
+          playerVelocity.x = 0;
+          playerVelocity.y = 0;
+          return;
+        }
+
         playerState.dashCooldown -= time.delta;
         playerState.dashTimer -= time.delta;
         playerState.platformDropTimer -= time.delta;
+        playerState.jumpBufferTimer -= time.delta;
 
         playerVelocity.y += GRAVITY * time.delta;
 
         boolean dashPressed = input.justPressed(KeyCode.K);
         boolean left = input.pressed(KeyCode.A);
         boolean right = input.pressed(KeyCode.D);
-        boolean jump = input.pressed(KeyCode.W) || input.pressed(KeyCode.SPACE);
+        boolean jumpPressed =
+          input.justPressed(KeyCode.W) || input.justPressed(KeyCode.SPACE);
         boolean drop = input.pressed(KeyCode.S);
         playerState.moving = left || right;
+
+        if (jumpPressed) {
+          playerState.jumpBufferTimer = JUMP_BUFFER_TIME;
+        }
+
+        // coyote time: capture "was on ground" before this frame's physics
+        // resets it below, so jumping just after walking off a ledge still
+        // works instead of feeling like it "didn't register"
+        if (playerState.onGround) {
+          playerState.coyoteTimer = COYOTE_TIME;
+        } else {
+          playerState.coyoteTimer -= time.delta;
+        }
 
         if (drop && playerState.platformDropTimer <= 0) {
           playerState.platformDropTimer = time.delta;
         }
 
-        if (left) {
-          playerVelocity.x += -SPEED;
-          playerState.facingRight = false;
-        } else if (right) {
-          playerVelocity.x += SPEED;
-          playerState.facingRight = true;
-        }
+        boolean dashing = playerState.dashTimer > 0;
 
-        if (
-          dashPressed &&
-          playerState.dashCooldown <= 0 &&
-          playerState.dashTimer <= 0
-        ) {
+        if (dashPressed && playerState.dashCooldown <= 0 && !dashing) {
           playerState.dashTimer = DASH_DURATION;
           playerState.dashCooldown = DASH_COOLDOWN;
-          playerVelocity.x += playerState.facingRight
+          dashing = true;
+          playerVelocity.y = 0;
+        }
+
+        if (dashing) {
+          // hold a steady dash speed for the whole dash duration instead of
+          // a single frame's nudge (velocity used to get reset to 0 every
+          // frame, so the dash only ever moved you one tick's worth)
+          playerVelocity.x = playerState.facingRight
             ? DASH_SPEED
             : -DASH_SPEED;
-          playerVelocity.y = 0;
+        } else {
+          double targetSpeed = 0;
+          if (left) {
+            targetSpeed = -SPEED;
+            playerState.facingRight = false;
+          } else if (right) {
+            targetSpeed = SPEED;
+            playerState.facingRight = true;
+          }
+
+          // smoothly accelerate/decelerate toward the target speed instead
+          // of snapping straight to it - slightly less control in the air,
+          // like most platformers
+          double rate =
+            (targetSpeed != 0 ? ACCELERATION : DECELERATION) *
+            (playerState.onGround ? 1.0 : AIR_CONTROL);
+          double maxStep = rate * time.delta;
+          double diff = targetSpeed - playerVelocity.x;
+
+          if (Math.abs(diff) <= maxStep) {
+            playerVelocity.x = targetSpeed;
+          } else {
+            playerVelocity.x += Math.signum(diff) * maxStep;
+          }
         }
 
         // keep the player inside the level
         if (playerTransform.x < PLAYER_W / 2) {
           playerTransform.x = PLAYER_W / 2;
+          playerVelocity.x = Math.max(playerVelocity.x, 0);
         }
         if (playerTransform.x > LEVEL_WIDTH - PLAYER_W / 2) {
           playerTransform.x = LEVEL_WIDTH - PLAYER_W / 2;
+          playerVelocity.x = Math.min(playerVelocity.x, 0);
         }
         playerTransform.x += playerVelocity.x * time.delta;
         playerTransform.y += playerVelocity.y * time.delta;
-        playerVelocity.x = 0;
 
         if (playerState.onGround) {
           playerState.fallStartY = playerTransform.y;
@@ -177,11 +223,14 @@ public final class PlayerMovementSystem implements System, Consts {
               double playerPrevBottom =
                 playerBottom - playerVelocity.y * time.delta;
 
+              double playerRightEdge = playerTransform.x + PLAYER_W / 2 - 20.0d;
+              double playerLeftEdge = playerTransform.x - PLAYER_W / 2 + 20.0d;
+              double platformLeftEdge = platformTransform.x;
+              double platformRightEdge = platformTransform.x + platformSprite.width;
+
               boolean horizOverlap =
-                playerTransform.x + PLAYER_W / 2 - 20.0d >
-                  platformTransform.x &&
-                playerTransform.x - PLAYER_W / 2 + 20.0d <
-                  platformTransform.x + platformSprite.width;
+                playerRightEdge > platformLeftEdge &&
+                playerLeftEdge < platformRightEdge;
 
               if (!horizOverlap) {
                 return;
@@ -205,8 +254,11 @@ public final class PlayerMovementSystem implements System, Consts {
             });
         }
 
-        if (jump && playerState.onGround) {
+        if (playerState.jumpBufferTimer > 0 && playerState.coyoteTimer > 0) {
           playerVelocity.y = JUMP_VEL;
+          playerState.jumpBufferTimer = 0;
+          playerState.coyoteTimer = 0;
+          playerState.onGround = false;
         }
 
         playerTransform.scaleX = playerState.facingRight

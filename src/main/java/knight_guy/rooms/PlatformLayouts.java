@@ -53,6 +53,29 @@ public class PlatformLayouts {
     EnemySpawner.spawn(world, manager, platforms);
   }
 
+  // boss arena - reuses platform art from all three regular rooms (rock,
+  // grass, cloud) instead of a single material, and is deliberately more
+  // open than a normal room since it's built around one big 1-on-1 fight
+  // rather than several small mobs. Heights are kept to ~110px steps -
+  // comfortably inside the ~140px max jump height instead of right at
+  // (or past) its limit. Returns the platform positions so the caller can
+  // place things (like heart pickups) relative to them.
+  public static List<PlatformData> bossArena(
+    World world,
+    RoomManager manager,
+    Image rockImg,
+    Image grassImg,
+    Image cloudImg
+  ) {
+    List<PlatformData> platforms = new ArrayList<>();
+
+    platforms.add(add(world, manager, rockImg, 130, 480, 220, 40));
+    platforms.add(add(world, manager, grassImg, 850, 480, 220, 40));
+    platforms.add(add(world, manager, cloudImg, 470, 370, 240, 40));
+
+    return platforms;
+  }
+
   // creates a platform
   private static PlatformData add(
     World world,

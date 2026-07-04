@@ -9,7 +9,11 @@ public final class AnimatedSprite extends Sprite {
   private static final record AnimDef(
     Image image,
     int frameCount,
-    boolean loop
+    boolean loop,
+    // null means "use the sprite's default frameDuration" - lets a single
+    // AnimatedSprite play most animations at one speed while a specific
+    // one (e.g. an attack swing) plays faster or slower
+    Double frameDuration
   ) {}
 
   public double offsetX;
@@ -49,7 +53,7 @@ public final class AnimatedSprite extends Sprite {
   }
 
   public void addAnimation(String tag, Image image, int frameCount) {
-    this.addAnimation(tag, image, frameCount, true);
+    this.addAnimation(tag, image, frameCount, true, null);
   }
 
   public void addAnimation(
@@ -58,7 +62,22 @@ public final class AnimatedSprite extends Sprite {
     int frameCount,
     boolean loop
   ) {
-    this.animations.put(tag, new AnimDef(image, frameCount, loop));
+    this.addAnimation(tag, image, frameCount, loop, null);
+  }
+
+  // lets a specific animation (e.g. a sword swing) play at its own speed
+  // instead of the sprite's default frameDuration
+  public void addAnimation(
+    String tag,
+    Image image,
+    int frameCount,
+    boolean loop,
+    Double frameDurationOverride
+  ) {
+    this.animations.put(
+      tag,
+      new AnimDef(image, frameCount, loop, frameDurationOverride)
+    );
   }
 
   public void setAnimation(String tag) {
@@ -81,5 +100,15 @@ public final class AnimatedSprite extends Sprite {
 
   public int getCurrentFrameCount() {
     return this.currentAnim != null ? this.currentAnim.frameCount : 1;
+  }
+
+  // the effective per-frame duration for whatever animation is currently
+  // playing - falls back to this sprite's default duration when the
+  // animation doesn't specify its own
+  public double getCurrentFrameDuration() {
+    if (this.currentAnim != null && this.currentAnim.frameDuration() != null) {
+      return this.currentAnim.frameDuration();
+    }
+    return this.frameDuration;
   }
 }

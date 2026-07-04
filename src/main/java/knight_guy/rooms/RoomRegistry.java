@@ -12,6 +12,10 @@ public final class RoomRegistry implements Resource {
   // current level index
   private int currentLevel = 1;
 
+  // set for one call whenever nextLevel() wraps back around to level 1,
+  // i.e. the player just finished a full loop (Dungeon -> Ground -> Sky)
+  private boolean loopJustCompleted = false;
+
   public RoomRegistry add(Room factory) {
     this.factories.add(factory);
     return this;
@@ -35,7 +39,16 @@ public final class RoomRegistry implements Resource {
         return new SkyRoom();
       default:
         currentLevel = 1;
+        loopJustCompleted = true;
         return new DungeonRoom();
     }
+  }
+
+  // returns whether the last nextLevel() call completed a full loop, and
+  // resets the flag - meant to be checked immediately after nextLevel()
+  public boolean consumeLoopCompleted() {
+    boolean result = loopJustCompleted;
+    loopJustCompleted = false;
+    return result;
   }
 }

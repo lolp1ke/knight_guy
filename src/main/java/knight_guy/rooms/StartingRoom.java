@@ -28,7 +28,7 @@ public class StartingRoom implements Room, Consts {
     }
     Image exitImg = AssetStore.load("exit.png");
     if (exitImg == null) {
-      exitImg = Utils.rect(32, 64, Color.LIME);
+      exitImg = Utils.portal(32, 92);
     }
 
     final double FLOOR_Y = SCREEN_HEIGHT - 10;

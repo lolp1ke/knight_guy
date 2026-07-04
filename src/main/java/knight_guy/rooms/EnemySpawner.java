@@ -3,12 +3,10 @@ package knight_guy.rooms;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import javafx.scene.paint.Color;
 import knight_guy.Consts;
-import knight_guy.Utils;
+import knight_guy.DifficultySettings;
+import knight_guy.EnemyFactory;
 import knight_guy.game_engine_internals.World;
-import knight_guy.game_engine_internals.components.Transform2D;
-import knight_guy.game_engine_internals.rendering.StaticSprite;
 
 public final class EnemySpawner implements Consts {
 
@@ -21,30 +19,35 @@ public final class EnemySpawner implements Consts {
     RoomManager manager,
     List<PlatformData> platforms
   ) {
+    DifficultySettings difficulty = world.getResource(DifficultySettings.class);
+    // number of platform enemies scales with difficulty instead of always
+    // being fixed at three
+    int platformEnemyCount =
+      difficulty != null ? difficulty.platformEnemyCount : 3;
+
     Collections.shuffle(platforms);
 
-    // three enemies on random platforms
-    for (int i = 0; i < Math.min(3, platforms.size()); i++) {
+    for (int i = 0; i < Math.min(platformEnemyCount, platforms.size()); i++) {
       PlatformData p = platforms.get(i);
 
       manager.addEntity(
-        world.spawn(
-          new StaticSprite(Utils.rect(40, 60, Color.RED)),
-          new Transform2D(p.x() + p.width() / 2 - 20, p.y() - 60)
+        EnemyFactory.create(
+          world,
+          p.x() + p.width() / 2,
+          p.y() - ENEMY_H / 2,
+          difficulty
         )
       );
     }
 
-    // one enemy on the ground
+    // one enemy on the ground, spawned near the middle of the level instead
+    // of a range that was biased toward the left side
     Random random = new Random();
 
-    double x = 100 + random.nextInt(700);
+    double x = LEVEL_WIDTH / 2.0 + (random.nextDouble() - 0.5) * 200.0;
 
     manager.addEntity(
-      world.spawn(
-        new StaticSprite(Utils.rect(40, 60, Color.RED)),
-        new Transform2D(x, FLOOR_Y - 60)
-      )
+      EnemyFactory.create(world, x, FLOOR_Y - ENEMY_H / 2, difficulty)
     );
   }
 }

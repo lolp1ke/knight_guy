@@ -4,6 +4,7 @@ import java.util.Random;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import knight_guy.Consts;
+import knight_guy.DifficultySettings;
 import knight_guy.Exit;
 import knight_guy.SolidPlatform;
 import knight_guy.Utils;
@@ -33,7 +34,7 @@ public class SkyRoom implements Room, Consts {
 
     Image exitImg = AssetStore.load("exit.png");
     if (exitImg == null) {
-      exitImg = Utils.rect(32, 64, Color.LIME);
+      exitImg = Utils.portal(32, 92);
     }
 
     final double FLOOR_Y = SCREEN_HEIGHT - 10;
@@ -72,12 +73,27 @@ public class SkyRoom implements Room, Consts {
         break;
     }
 
+    // Sky is the last room of the regular loop (Dungeon -> Ground -> Sky).
+    // On Hard, that's the cue to send the player into the boss room
+    // instead of wrapping back to Dungeon; Easy keeps the original
+    // behavior of ending the run right here.
+    DifficultySettings difficulty = world.getResource(DifficultySettings.class);
+    Exit exit;
+
+    if (difficulty != null && difficulty.bossFightEnabled) {
+      exit = new Exit(new BossRoom(), false);
+    } else {
+      Room nextRoom = registry.nextLevel();
+      boolean completesLoop = registry.consumeLoopCompleted();
+      exit = new Exit(nextRoom, completesLoop);
+    }
+
     // spawn exit
     manager.addEntity(
       world.spawn(
         new StaticSprite(exitImg, 32, 92),
         new Transform2D(LEVEL_WIDTH - 80, FLOOR_Y - 92),
-        new Exit(registry.nextLevel())
+        exit
       )
     );
   }

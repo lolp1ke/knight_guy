@@ -15,6 +15,13 @@ public class PlayerState implements Resource {
   public double attackCooldown = 0;
   public double fallStartY = 0;
 
+  // movement feel
+  public double coyoteTimer = 0;
+  public double jumpBufferTimer = 0;
+
+  // death
+  public boolean dying = false;
+
   public static final int MAX_HP = 4;
   public int hp = MAX_HP;
 
